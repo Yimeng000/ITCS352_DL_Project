@@ -14,7 +14,7 @@ This baseline model provides a starting point for improving robustness under rea
 Lighting variation
 Different orientations
 Noise and occlusion
-📂 Project Structure
+📂 Project Structure<b>
 <img width="300" height="500" alt="image" src="https://github.com/user-attachments/assets/006827ec-a9ca-49a1-a81a-dd6e33985d07" />
 
 
