@@ -1,4 +1,0 @@
-===== FINAL TEST RESULTS =====
-Test Loss     : 0.0677
-Test Accuracy : 0.9888
-Test Macro F1 : 0.9801
