@@ -15,7 +15,7 @@ Lighting variation
 Different orientations
 Noise and occlusion
 📂 Project Structure
-<img width="855" height="1020" alt="image" src="https://github.com/user-attachments/assets/006827ec-a9ca-49a1-a81a-dd6e33985d07" />
+<img width="300" height="500" alt="image" src="https://github.com/user-attachments/assets/006827ec-a9ca-49a1-a81a-dd6e33985d07" />
 
 
 ⚠️ Note: Dataset files are not included in this repository.
