@@ -1,0 +1,24 @@
+TRAIN
+bluecircles: 547
+diamonds: 199
+forbidden: 90
+rectanglesdown: 45
+rectanglesup: 361
+redbluecircles: 243
+redcircles: 542
+revtriangle: 136
+squares: 294
+stop: 16
+triangles: 476
+
+TEST
+bluecircles: 306
+diamonds: 81
+forbidden: 10
+rectanglesup: 158
+redbluecircles: 52
+redcircles: 484
+revtriangle: 106
+squares: 76
+stop: 26
+triangles: 337

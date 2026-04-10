@@ -1,0 +1,19 @@
+# dataset
+dataset/
+data/
+BelgiumTSC_Training/
+BelgiumTS/
+*.zip
+*.rar
+
+# model weights
+*.pth
+*.pt
+
+# python
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# system
+.DS_Store
