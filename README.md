@@ -15,27 +15,8 @@ Lighting variation
 Different orientations
 Noise and occlusion
 📂 Project Structure
-ITCS352_DL_Project/
-│
-├── baseline/
-│   ├── dataset.py
-│   ├── model.py
-│   ├── train.py
-│   ├── prepare_belgiumts.py
-│   ├── cropped_belgiumts_classification/   (ignored)
-│   ├── outputs_belgiumts_classification/   (ignored)
-│
-├── baseline0/
-│   ├── dataset.py
-│   ├── model.py
-│   ├── train.py
-│   ├── prepare_belgiumts.py
-│   ├── cropped_belgiumts/   (ignored)
-│   ├── outputs_belgiumts/   (ignored)
-│
-├── data/   (ignored)
-├── README.md
-└── .gitignore
+<img width="855" height="1020" alt="image" src="https://github.com/user-attachments/assets/006827ec-a9ca-49a1-a81a-dd6e33985d07" />
+
 
 ⚠️ Note: Dataset files are not included in this repository.
 
