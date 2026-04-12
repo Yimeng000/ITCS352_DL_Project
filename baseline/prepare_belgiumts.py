@@ -1,12 +1,10 @@
 import csv
+import shutil
 from pathlib import Path
 from collections import Counter
 from PIL import Image
 
-
 # ========= 配置区 =========
-from pathlib import Path
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = PROJECT_ROOT / "data"
 ANNOTATION_DIR = DATA_ROOT / "BelgiumTSD_annotations"
@@ -15,38 +13,25 @@ OUTPUT_ROOT = Path(__file__).resolve().parent / "cropped_belgiumts_classid"
 TRAIN_FILE = ANNOTATION_DIR / "BTSD_training_GTclear.txt"
 TEST_FILE = ANNOTATION_DIR / "BTSD_testing_GTclear.txt"
 
-ALLOWED_CAMERAS = {"00", "01", "02"}
-
-# 这里固定用 class_id
-USE_SUPERCLASS = False
-
-IGNORE_SUPERCLASSES = {-1, 0}
+# None = 自动使用所有 camera
+ALLOWED_CAMERAS = None
 
 MIN_WIDTH = 20
 MIN_HEIGHT = 20
 
-# 可选：过滤样本太少的 class_id
 # 设为 0 表示不过滤
-MIN_SAMPLES_PER_CLASS = 20
-
-SUPERCLASS_NAMES = {
-    1: "triangles",
-    2: "redcircles",
-    3: "bluecircles",
-    4: "redbluecircles",
-    5: "diamonds",
-    6: "revtriangle",
-    7: "stop",
-    8: "forbidden",
-    9: "squares",
-    10: "rectanglesup",
-    11: "rectanglesdown",
-}
+MIN_SAMPLES_PER_CLASS = 10
 # =========================
 
 
 def safe_mkdir(path: Path):
     path.mkdir(parents=True, exist_ok=True)
+
+
+def reset_output_dir(output_root: Path):
+    if output_root.exists():
+        shutil.rmtree(output_root)
+    output_root.mkdir(parents=True, exist_ok=True)
 
 
 def parse_annotation_file(txt_path: Path):
@@ -89,17 +74,34 @@ def parse_annotation_file(txt_path: Path):
     return rows
 
 
-def get_label_name(class_id: int, superclass_id: int):
-    if USE_SUPERCLASS:
-        if superclass_id in IGNORE_SUPERCLASSES:
-            return None
-        return SUPERCLASS_NAMES.get(superclass_id, f"superclass_{superclass_id}")
-
-    # class-id 模式下，也要过滤 undefined 类
+def get_label_name(class_id: int, superclass_id: int = None):
+    # 过滤 undefined 类
     if class_id == -1:
         return None
-
     return f"class_{class_id}"
+
+
+def camera_allowed(camera: str) -> bool:
+    if ALLOWED_CAMERAS is None:
+        return True
+    return camera in ALLOWED_CAMERAS
+
+
+def is_valid_bbox(row) -> bool:
+    x1 = int(round(row["x1"]))
+    y1 = int(round(row["y1"]))
+    x2 = int(round(row["x2"]))
+    y2 = int(round(row["y2"]))
+
+    crop_w = x2 - x1
+    crop_h = y2 - y1
+
+    if crop_w < MIN_WIDTH or crop_h < MIN_HEIGHT:
+        return False
+    if x2 <= x1 or y2 <= y1:
+        return False
+
+    return True
 
 
 def crop_one_image(image_path: Path, x1: float, y1: float, x2: float, y2: float):
@@ -126,27 +128,14 @@ def collect_class_counts(rows):
     counter = Counter()
 
     for row in rows:
-        if row["camera"] not in ALLOWED_CAMERAS:
+        if not camera_allowed(row["camera"]):
             continue
 
         label_name = get_label_name(row["class_id"], row["superclass_id"])
         if label_name is None:
             continue
 
-        image_path = DATA_ROOT / row["img_rel"]
-        if not image_path.exists():
-            continue
-
-        # 🔥 加这一行：确保 bbox 也合法
-        crop = crop_one_image(
-            image_path=image_path,
-            x1=row["x1"],
-            y1=row["y1"],
-            x2=row["x2"],
-            y2=row["y2"]
-        )
-
-        if crop is None:
+        if not is_valid_bbox(row):
             continue
 
         counter[label_name] += 1
@@ -163,9 +152,12 @@ def build_allowed_class_set(train_rows, test_rows):
 
     allowed = set()
     all_classes = set(train_counter.keys()) | set(test_counter.keys())
+
     for cls in all_classes:
-        # 这里用 train/test 都达到阈值，更稳
-        if train_counter.get(cls, 0) >= MIN_SAMPLES_PER_CLASS and test_counter.get(cls, 0) >= MIN_SAMPLES_PER_CLASS:
+        if (
+            train_counter.get(cls, 0) >= MIN_SAMPLES_PER_CLASS
+            and test_counter.get(cls, 0) >= MIN_SAMPLES_PER_CLASS
+        ):
             allowed.add(cls)
 
     return allowed
@@ -183,10 +175,10 @@ def process_split(rows, split_name: str, allowed_classes=None):
     skipped_rare = 0
     saved_count = 0
 
-    for idx, row in enumerate(rows):
+    for idx, row in enumerate(rows, start=1):
         camera = row["camera"]
 
-        if camera not in ALLOWED_CAMERAS:
+        if not camera_allowed(camera):
             skipped_camera += 1
             continue
 
@@ -209,7 +201,7 @@ def process_split(rows, split_name: str, allowed_classes=None):
             x1=row["x1"],
             y1=row["y1"],
             x2=row["x2"],
-            y2=row["y2"]
+            y2=row["y2"],
         )
 
         if crop is None:
@@ -231,8 +223,8 @@ def process_split(rows, split_name: str, allowed_classes=None):
         class_counter[label_name] += 1
         saved_count += 1
 
-        if (idx + 1) % 1000 == 0:
-            print(f"[{split_name}] processed {idx + 1}/{len(rows)}")
+        if idx % 1000 == 0:
+            print(f"[{split_name}] processed {idx}/{len(rows)}")
 
     print(f"\n===== {split_name.upper()} SUMMARY =====")
     print(f"Saved crops     : {saved_count}")
@@ -255,7 +247,8 @@ def main():
     if not TEST_FILE.exists():
         raise FileNotFoundError(f"Testing annotation not found: {TEST_FILE}")
 
-    safe_mkdir(OUTPUT_ROOT)
+    print("Resetting output directory...")
+    reset_output_dir(OUTPUT_ROOT)
 
     print("Reading annotations...")
     train_rows = parse_annotation_file(TRAIN_FILE)
@@ -264,9 +257,18 @@ def main():
     print(f"Train annotations loaded: {len(train_rows)}")
     print(f"Test annotations loaded : {len(test_rows)}\n")
 
+    if ALLOWED_CAMERAS is None:
+        train_cams = {r['camera'] for r in train_rows}
+        test_cams = {r['camera'] for r in test_rows}
+        print(f"Detected train cameras: {sorted(train_cams)}")
+        print(f"Detected test cameras : {sorted(test_cams)}\n")
+
     allowed_classes = build_allowed_class_set(train_rows, test_rows)
     if allowed_classes is not None:
-        print(f"Keeping {len(allowed_classes)} class-id categories with >= {MIN_SAMPLES_PER_CLASS} samples in both train and test.\n")
+        print(
+            f"Keeping {len(allowed_classes)} class-id categories "
+            f"with >= {MIN_SAMPLES_PER_CLASS} samples in both train and test.\n"
+        )
 
     train_counter = process_split(train_rows, "train", allowed_classes=allowed_classes)
     test_counter = process_split(test_rows, "test", allowed_classes=allowed_classes)

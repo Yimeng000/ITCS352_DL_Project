@@ -12,7 +12,6 @@ BelgiumTS/
 
 # python
 __pycache__/
-.ipynb_checkpoints/
 *.pyc
 
 # system
