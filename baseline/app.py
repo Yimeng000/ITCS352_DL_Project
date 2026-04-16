@@ -1,47 +1,27 @@
 import streamlit as st
 from PIL import Image
 import torch
-from torchvision import transforms
+from torchvision import transforms, datasets
+from pathlib import Path
 
-from model import SimpleCNN
+from model import ResNet18Classifier
 
 st.title("Traffic Sign Demo")
 
-CLASS_NAMES = [
-    "class_118", "class_12", "class_124", "class_130", "class_149",
-    "class_151", "class_153", "class_155", "class_194", "class_31",
-    "class_34", "class_35", "class_41", "class_57", "class_59",
-    "class_61", "class_65", "class_76", "class_80", "class_81",
-    "class_82", "class_87", "class_94"
-]
-
-CLASS_DISPLAY_NAMES = {
-    "class_118": "Traffic Sign 118",
-    "class_12": "Traffic Sign 12",
-    "class_124": "Traffic Sign 124",
-    "class_130": "Traffic Sign 130",
-    "class_149": "Traffic Sign 149",
-    "class_151": "Traffic Sign 151",
-    "class_153": "Traffic Sign 153",
-    "class_155": "Traffic Sign 155",
-    "class_194": "Traffic Sign 194",
-    "class_31": "Traffic Sign 31",
-    "class_34": "Traffic Sign 34",
-    "class_35": "Traffic Sign 35",
-    "class_41": "Traffic Sign 41",
-    "class_57": "Traffic Sign 57",
-    "class_59": "Traffic Sign 59",
-    "class_61": "Traffic Sign 61",
-    "class_65": "Traffic Sign 65",
-    "class_76": "Traffic Sign 76",
-    "class_80": "Traffic Sign 80",
-    "class_81": "Traffic Sign 81",
-    "class_82": "Traffic Sign 82",
-    "class_87": "Traffic Sign 87",
-    "class_94": "Traffic Sign 94",
-}
-
+BASE_DIR = Path(__file__).resolve().parent
+DATA_ROOT = BASE_DIR / "cropped_belgiumts_classid" / "train"
+MODEL_PATH = BASE_DIR / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def load_class_names():
+    dataset = datasets.ImageFolder(root=str(DATA_ROOT))
+    return dataset.classes
+
+
+CLASS_NAMES = load_class_names()
+
+CLASS_DISPLAY_NAMES = {name: name.replace("_", " ").title() for name in CLASS_NAMES}
 
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
@@ -52,10 +32,8 @@ transform = transforms.Compose([
 
 @st.cache_resource
 def load_model():
-    model = SimpleCNN(num_classes=len(CLASS_NAMES))
-    model.load_state_dict(
-        torch.load("outputs_belgiumts_classid/best_simplecnn_belgiumts.pth", map_location=DEVICE)
-    )
+    model = ResNet18Classifier(num_classes=len(CLASS_NAMES))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     model.to(DEVICE)
     model.eval()
     return model
@@ -77,7 +55,10 @@ def predict_image(model, image: Image.Image):
 
 model = load_model()
 
-uploaded_file = st.file_uploader("Upload a road image or cropped sign image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader(
+    "Upload a road image or cropped sign image",
+    type=["jpg", "jpeg", "png"]
+)
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")

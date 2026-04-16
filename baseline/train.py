@@ -1,8 +1,6 @@
-import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,21 +13,38 @@ from sklearn.metrics import (
 )
 
 from dataset import get_dataloaders
-# from ITCS352_DL_Project.baseline0.model import SimpleCNN
-import sys
-from pathlib import Path
-from model import SimpleCNN
+from model import SimpleCNN, ResNet18Classifier
 
-BASE_DIR = Path(__file__).resolve().parent
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-OUTPUT_DIR = BASE_DIR / "outputs_belgiumts_classid"
-OUTPUT_DIR.mkdir(exist_ok=True)
 
-NUM_EPOCHS = 15
-LEARNING_RATE = 0.001
-BATCH_SIZE = 32
-IMG_SIZE = 64
-EARLY_STOPPING_PATIENCE = 5
+# =========================
+# Config
+# =========================
+base_dir = Path(__file__).resolve().parent
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model_name = "ResNet18"      # "SimpleCNN" or "ResNet18"
+augmentation = True     # True / False
+
+num_epoch = 15
+learning_rate = 0.001
+batch_size = 32
+img_size = 64
+early_stopping_patience = 5
+pretrained = True
+
+data_root = base_dir / "cropped_belgiumts_classid"
+output_dir = base_dir / f"outputs_{model_name}_aug{augmentation}"
+output_dir.mkdir(exist_ok=True)
+# =========================
+
+
+def build_model(model_name: str, num_classes: int):
+    if model_name == "SimpleCNN":
+        return SimpleCNN(num_classes=num_classes)
+    elif model_name == "ResNet18":
+        return ResNet18Classifier(num_classes=num_classes, pretrained=pretrained)
+    else:
+        raise ValueError(f"Unsupported MODEL_NAME: {model_name}")
 
 
 def evaluate_model(model, loader, criterion):
@@ -41,8 +56,8 @@ def evaluate_model(model, loader, criterion):
 
     with torch.no_grad():
         for images, labels in loader:
-            images = images.to(DEVICE)
-            labels = labels.to(DEVICE)
+            images = images.to(device)
+            labels = labels.to(device)
 
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -90,7 +105,7 @@ def save_confusion_matrix(y_true, y_pred, class_names, save_path):
     cm = confusion_matrix(y_true, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(14, 12))
     disp.plot(ax=ax, xticks_rotation=45, cmap="Blues", colorbar=False)
     plt.title("Confusion Matrix")
     plt.tight_layout()
@@ -100,37 +115,44 @@ def save_confusion_matrix(y_true, y_pred, class_names, save_path):
 
 def train():
     train_loader, val_loader, test_loader, class_names = get_dataloaders(
-        data_root=BASE_DIR /"cropped_belgiumts_classid",
-        batch_size=BATCH_SIZE,
-        img_size=IMG_SIZE,
+        data_root=data_root,
+        batch_size=batch_size,
+        img_size=img_size,
         val_ratio=0.2,
-        augmented=False,   # baseline 先设 False
+        augmented=augmentation,
         num_workers=2,
     )
 
     num_classes = len(class_names)
-    print("Using classes:", class_names)
-    print("Num classes:", num_classes)
 
-    model = SimpleCNN(num_classes=num_classes).to(DEVICE)
+    print("=" * 50)
+    print(f"Model Name       : {model_name}")
+    print(f"Use Augmentation : {augmentation}")
+    print(f"Num Classes      : {num_classes}")
+    print(f"Output Dir       : {output_dir}")
+    print("=" * 50)
+
+    model = build_model(model_name, num_classes=num_classes).to(device)
+
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     train_losses = []
     val_losses = []
     val_accs = []
     val_f1s = []
 
-    best_val_f1 = -1
+    best_val_f1 = -1.0
     patience_counter = 0
+    best_model_path = output_dir / f"best_{model_name}.pth"
 
-    for epoch in range(NUM_EPOCHS):
+    for epoch in range(num_epoch):
         model.train()
         running_loss = 0.0
 
         for images, labels in train_loader:
-            images = images.to(DEVICE)
-            labels = labels.to(DEVICE)
+            images = images.to(device)
+            labels = labels.to(device)
 
             optimizer.zero_grad()
             outputs = model(images)
@@ -149,7 +171,7 @@ def train():
         val_f1s.append(val_f1)
 
         print(
-            f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
+            f"Epoch [{epoch+1}/{num_epoch}] | "
             f"Train Loss: {train_loss:.4f} | "
             f"Val Loss: {val_loss:.4f} | "
             f"Val Acc: {val_acc:.4f} | "
@@ -159,19 +181,19 @@ def train():
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
             patience_counter = 0
-            torch.save(model.state_dict(), OUTPUT_DIR / "best_simplecnn_belgiumts.pth")
+            torch.save(model.state_dict(), best_model_path)
         else:
             patience_counter += 1
 
-        if patience_counter >= EARLY_STOPPING_PATIENCE:
+        if patience_counter >= early_stopping_patience:
             print("Early stopping triggered.")
             break
 
-    plot_loss_curve(train_losses, val_losses, OUTPUT_DIR / "loss_curve.png")
-    plot_metric_curve(val_accs, val_f1s, OUTPUT_DIR / "val_metrics.png")
+    plot_loss_curve(train_losses, val_losses, output_dir / "loss_curve.png")
+    plot_metric_curve(val_accs, val_f1s, output_dir / "val_metrics.png")
 
     print("\nLoading best model for final test evaluation...")
-    model.load_state_dict(torch.load(OUTPUT_DIR / "best_simplecnn_belgiumts.pth", map_location=DEVICE))
+    model.load_state_dict(torch.load(best_model_path, map_location=device))
 
     test_loss, test_acc, test_f1, y_true, y_pred = evaluate_model(model, test_loader, criterion)
 
@@ -189,23 +211,34 @@ def train():
     print("\nClassification Report:\n")
     print(report)
 
-    with open(OUTPUT_DIR / "classification_report.txt", "w", encoding="utf-8") as f:
+    with open(output_dir / "classification_report.txt", "w", encoding="utf-8") as f:
         f.write(report)
 
     save_confusion_matrix(
         y_true=y_true,
         y_pred=y_pred,
         class_names=class_names,
-        save_path=OUTPUT_DIR / "confusion_matrix.png",
+        save_path=output_dir / "confusion_matrix.png",
     )
 
-    with open(OUTPUT_DIR / "final_test_results.txt", "w", encoding="utf-8") as f:
+    with open(output_dir / "final_test_results.txt", "w", encoding="utf-8") as f:
         f.write("===== FINAL TEST RESULTS =====\n")
+        f.write(f"Model Name    : {model_name}\n")
+        f.write(f"Augmentation  : {augmentation}\n")
         f.write(f"Test Loss     : {test_loss:.4f}\n")
         f.write(f"Test Accuracy : {test_acc:.4f}\n")
         f.write(f"Test Macro F1 : {test_f1:.4f}\n")
 
-    print(f"\nAll outputs saved to: {OUTPUT_DIR.resolve()}")
+    with open(output_dir / "run_config.txt", "w", encoding="utf-8") as f:
+        f.write(f"MODEL_NAME={model_name}\n")
+        f.write(f"USE_AUGMENTATION={augmentation}\n")
+        f.write(f"NUM_EPOCHS={num_epoch}\n")
+        f.write(f"LEARNING_RATE={learning_rate}\n")
+        f.write(f"BATCH_SIZE={batch_size}\n")
+        f.write(f"IMG_SIZE={img_size}\n")
+        f.write(f"PRETRAINED={pretrained}\n")
+
+    print(f"\nAll outputs saved to: {output_dir.resolve()}")
 
 
 if __name__ == "__main__":

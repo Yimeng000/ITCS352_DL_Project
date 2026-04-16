@@ -1,14 +1,15 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import models
 
 
 class SimpleCNN(nn.Module):
-    def __init__(self, num_classes=8):
+    def __init__(self, num_classes=47):
         super(SimpleCNN, self).__init__()
         self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
-        self.fc1 = nn.Linear(64 * 16 * 16, 128)  # 因为输入是 64x64
+        self.fc1 = nn.Linear(64 * 16 * 16, 128)  # input = 64x64
         self.fc2 = nn.Linear(128, num_classes)
 
     def forward(self, x):
@@ -18,3 +19,20 @@ class SimpleCNN(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
+
+
+class ResNet18Classifier(nn.Module):
+    def __init__(self, num_classes=47, pretrained=True):
+        super().__init__()
+
+        if pretrained:
+            weights = models.ResNet18_Weights.DEFAULT
+        else:
+            weights = None
+
+        self.backbone = models.resnet18(weights=weights)
+        in_features = self.backbone.fc.in_features
+        self.backbone.fc = nn.Linear(in_features, num_classes)
+
+    def forward(self, x):
+        return self.backbone(x)
