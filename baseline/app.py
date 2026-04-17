@@ -1,14 +1,21 @@
+import json
+from pathlib import Path
+
 import streamlit as st
 from PIL import Image
 import torch
 from torchvision import transforms, datasets
-from pathlib import Path
 
 from model import ResNet18Classifier
 
 st.title("Traffic Sign Demo")
 
 BASE_DIR = Path(__file__).resolve().parent
+MAPPING_PATH = BASE_DIR / "class_mapping.json"
+
+with open(MAPPING_PATH, "r", encoding="utf-8") as f:
+    CLASS_NAME_MAP = json.load(f)
+
 DATA_ROOT = BASE_DIR / "cropped_belgiumts_classid" / "train"
 MODEL_PATH = BASE_DIR / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -21,8 +28,6 @@ def load_class_names():
 
 CLASS_NAMES = load_class_names()
 
-CLASS_DISPLAY_NAMES = {name: name.replace("_", " ").title() for name in CLASS_NAMES}
-
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
     transforms.ToTensor(),
@@ -32,7 +37,7 @@ transform = transforms.Compose([
 
 @st.cache_resource
 def load_model():
-    model = ResNet18Classifier(num_classes=len(CLASS_NAMES))
+    model = ResNet18Classifier(num_classes=len(CLASS_NAMES), pretrained=False)
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
     model.to(DEVICE)
     model.eval()
@@ -49,8 +54,9 @@ def predict_image(model, image: Image.Image):
         confidence = probs[0, pred_idx].item()
 
     class_id = CLASS_NAMES[pred_idx]
-    display_name = CLASS_DISPLAY_NAMES.get(class_id, class_id)
-    return class_id, display_name, confidence
+    display_name = CLASS_NAME_MAP.get(class_id, class_id)
+
+    return class_id, display_name, confidence, probs
 
 
 model = load_model()
@@ -64,7 +70,7 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
 
     st.subheader("Original Image")
-    st.image(image, caption="Uploaded image", use_container_width=True)
+    st.image(image, caption="Uploaded image", width="stretch")
 
     st.markdown("### Step 1: Crop the traffic sign region")
     st.markdown("Adjust the sliders so that only the main traffic sign is inside the crop.")
@@ -87,9 +93,21 @@ if uploaded_file is not None:
     st.image(cropped, caption="Cropped region for classification", width=220)
 
     if st.button("Predict"):
-        class_id, display_name, confidence = predict_image(model, cropped)
+        class_id, display_name, confidence, probs = predict_image(model, cropped)
 
         st.subheader("Prediction")
-        st.write(f"Predicted label: **{display_name}**")
+        st.write(f"Predicted: **{display_name}**")
         st.write(f"Internal class id: `{class_id}`")
         st.write(f"Confidence: **{confidence:.4f}**")
+
+        topk = torch.topk(probs, 3)
+
+        st.write("Top 3 Predictions:")
+        for i in range(3):
+            idx = topk.indices[0][i].item()
+            score = topk.values[0][i].item()
+
+            cid = CLASS_NAMES[idx]
+            name = CLASS_NAME_MAP.get(cid, cid)
+
+            st.write(f"{i+1}. {name} ({score:.4f})")
