@@ -1,6 +1,6 @@
-===== FINAL TEST RESULTS =====
-Model Name    : SimpleCNN
-Augmentation  : True
-Test Loss     : 0.2354
-Test Accuracy : 0.9483
-Test Macro F1 : 0.9062
+FINAL TEST RESULTS: 
+Model Name: SimpleCNN
+Augmentation: True
+Test Loss: 0.3023
+Test Accuracy: 0.9498
+Test Macro F1: 0.8944

@@ -20,9 +20,9 @@ base_dir = Path(__file__).resolve().parent
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model_name = "ResNet18"      # "SimpleCNN" / "ResNet18"
-augmentation = True     # True / False
+augmentation = False     # True / False
 
-num_epoch = 15
+num_epoch = 20
 learning_rate = 0.001
 batch_size = 32
 img_size = 64

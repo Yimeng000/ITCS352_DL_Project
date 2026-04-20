@@ -6,7 +6,7 @@ from PIL import Image
 import torch
 from torchvision import transforms, datasets
 
-from model import ResNet18Classifier
+from model import ResNet18Classifier, SimpleCNN
 
 st.title("Traffic Sign Demo")
 
@@ -17,7 +17,10 @@ with open(MAPPING_PATH, "r", encoding="utf-8") as f:
     CLASS_NAME_MAP = json.load(f)
 
 data_root = base_dir / "cropped_belgiumts_classid" / "train"
-model_path = base_dir / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
+# model_path = base_dir / "outputs_SimpleCNN_augFalse" / "best_SimpleCNN.pth"
+# model_path = base_dir / "outputs_SimpleCNN_augTrue" / "best_SimpleCNN.pth"
+model_path = base_dir / "outputs_ResNet18_augFalse" / "best_ResNet18.pth"
+# model_path = base_dir / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -26,7 +29,7 @@ def load_class_names():
     return dataset.classes
 
 
-CLASS_NAMES = load_class_names()
+class_names = load_class_names()
 
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
@@ -37,7 +40,8 @@ transform = transforms.Compose([
 
 @st.cache_resource
 def load_model():
-    model = ResNet18Classifier(num_classes=len(CLASS_NAMES), pretrained=False)
+    # model = ResNet18Classifier(num_classes=len(class_names), pretrained=False)  
+    model = SimpleCNN(num_classes=len(class_names))
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
@@ -53,7 +57,7 @@ def predict_image(model, image: Image.Image):
         pred_idx = torch.argmax(probs, dim=1).item()
         confidence = probs[0, pred_idx].item()
 
-    class_id = CLASS_NAMES[pred_idx]
+    class_id = class_names[pred_idx]
     display_name = CLASS_NAME_MAP.get(class_id, class_id)
 
     return class_id, display_name, confidence, probs
@@ -107,7 +111,7 @@ if uploaded_file is not None:
             idx = topk.indices[0][i].item()
             score = topk.values[0][i].item()
 
-            cid = CLASS_NAMES[idx]
+            cid = class_names[idx]
             name = CLASS_NAME_MAP.get(cid, cid)
 
             st.write(f"{i+1}. {name} ({score:.4f})")
