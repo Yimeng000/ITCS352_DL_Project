@@ -5,22 +5,24 @@ from collections import Counter
 from PIL import Image
 
 # ========= 配置区 =========
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_ROOT = PROJECT_ROOT / "data"
-ANNOTATION_DIR = DATA_ROOT / "BelgiumTSD_annotations"
-OUTPUT_ROOT = Path(__file__).resolve().parent / "cropped_belgiumts_classid"
+project_root  = Path(__file__).resolve().parent.parent
+data_root = project_root / "data"   
+annotation_dir = data_root  / "BelgiumTSD_annotations"  
+output_root = Path(__file__).resolve().parent / "cropped_belgiumts_classid"  
 
-TRAIN_FILE = ANNOTATION_DIR / "BTSD_training_GTclear.txt"
-TEST_FILE = ANNOTATION_DIR / "BTSD_testing_GTclear.txt"
+# 训练和测试标注文件
+train_file = annotation_dir / "BTSD_training_GTclear.txt"
+test_file = annotation_dir / "BTSD_testing_GTclear.txt"
 
 # None = 自动使用所有 camera
-ALLOWED_CAMERAS = None
+allowed_cameras = None
 
-MIN_WIDTH = 20
-MIN_HEIGHT = 20
+min_width = 20
+min_height = 20
+
 
 # 设为 0 表示不过滤
-MIN_SAMPLES_PER_CLASS = 10
+min_samples_per_class = 10
 # =========================
 
 
@@ -82,9 +84,9 @@ def get_label_name(class_id: int, superclass_id: int = None):
 
 
 def camera_allowed(camera: str) -> bool:
-    if ALLOWED_CAMERAS is None:
+    if allowed_cameras is None:
         return True
-    return camera in ALLOWED_CAMERAS
+    return camera in allowed_cameras
 
 
 def is_valid_bbox(row) -> bool:
@@ -96,7 +98,7 @@ def is_valid_bbox(row) -> bool:
     crop_w = x2 - x1
     crop_h = y2 - y1
 
-    if crop_w < MIN_WIDTH or crop_h < MIN_HEIGHT:
+    if crop_w < min_width or crop_h < min_height:
         return False
     if x2 <= x1 or y2 <= y1:
         return False
@@ -116,7 +118,7 @@ def crop_one_image(image_path: Path, x1: float, y1: float, x2: float, y2: float)
     crop_w = x2 - x1
     crop_h = y2 - y1
 
-    if crop_w < MIN_WIDTH or crop_h < MIN_HEIGHT:
+    if crop_w < min_width or crop_h < min_height:
         return None
     if x2 <= x1 or y2 <= y1:
         return None
@@ -144,7 +146,7 @@ def collect_class_counts(rows):
 
 
 def build_allowed_class_set(train_rows, test_rows):
-    if MIN_SAMPLES_PER_CLASS <= 0:
+    if min_samples_per_class <= 0:
         return None
 
     train_counter = collect_class_counts(train_rows)
@@ -155,8 +157,8 @@ def build_allowed_class_set(train_rows, test_rows):
 
     for cls in all_classes:
         if (
-            train_counter.get(cls, 0) >= MIN_SAMPLES_PER_CLASS
-            and test_counter.get(cls, 0) >= MIN_SAMPLES_PER_CLASS
+            train_counter.get(cls, 0) >= min_samples_per_class
+            and test_counter.get(cls, 0) >= min_samples_per_class
         ):
             allowed.add(cls)
 
@@ -164,7 +166,7 @@ def build_allowed_class_set(train_rows, test_rows):
 
 
 def process_split(rows, split_name: str, allowed_classes=None):
-    split_output = OUTPUT_ROOT / split_name
+    split_output = output_root / split_name
     safe_mkdir(split_output)
 
     class_counter = Counter()
@@ -191,7 +193,7 @@ def process_split(rows, split_name: str, allowed_classes=None):
             skipped_rare += 1
             continue
 
-        image_path = DATA_ROOT / row["img_rel"]
+        image_path = data_root / row["img_rel"]
         if not image_path.exists():
             skipped_missing += 1
             continue
@@ -242,22 +244,22 @@ def process_split(rows, split_name: str, allowed_classes=None):
 
 
 def main():
-    if not TRAIN_FILE.exists():
-        raise FileNotFoundError(f"Training annotation not found: {TRAIN_FILE}")
-    if not TEST_FILE.exists():
-        raise FileNotFoundError(f"Testing annotation not found: {TEST_FILE}")
+    if not train_file.exists():
+        raise FileNotFoundError(f"Training annotation not found: {train_file}")
+    if not test_file.exists():
+        raise FileNotFoundError(f"Testing annotation not found: {test_file}")
 
     print("Resetting output directory...")
-    reset_output_dir(OUTPUT_ROOT)
+    reset_output_dir(output_root)
 
     print("Reading annotations...")
-    train_rows = parse_annotation_file(TRAIN_FILE)
-    test_rows = parse_annotation_file(TEST_FILE)
+    train_rows = parse_annotation_file(train_file)
+    test_rows = parse_annotation_file(test_file)
 
     print(f"Train annotations loaded: {len(train_rows)}")
     print(f"Test annotations loaded : {len(test_rows)}\n")
 
-    if ALLOWED_CAMERAS is None:
+    if allowed_cameras is None:
         train_cams = {r['camera'] for r in train_rows}
         test_cams = {r['camera'] for r in test_rows}
         print(f"Detected train cameras: {sorted(train_cams)}")
@@ -267,16 +269,16 @@ def main():
     if allowed_classes is not None:
         print(
             f"Keeping {len(allowed_classes)} class-id categories "
-            f"with >= {MIN_SAMPLES_PER_CLASS} samples in both train and test.\n"
+            f"with >= {min_samples_per_class} samples in both train and test.\n"
         )
 
     train_counter = process_split(train_rows, "train", allowed_classes=allowed_classes)
     test_counter = process_split(test_rows, "test", allowed_classes=allowed_classes)
 
     print("Done.")
-    print(f"Output saved to: {OUTPUT_ROOT.resolve()}")
+    print(f"Output saved to: {output_root.resolve()}")
 
-    stats_path = OUTPUT_ROOT / "class_distribution.txt"
+    stats_path = output_root / "class_distribution.txt"
     with open(stats_path, "w", encoding="utf-8") as f:
         f.write("TRAIN\n")
         for cls, cnt in sorted(train_counter.items(), key=lambda x: x[0]):
