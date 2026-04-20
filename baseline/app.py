@@ -10,19 +10,19 @@ from model import ResNet18Classifier
 
 st.title("Traffic Sign Demo")
 
-BASE_DIR = Path(__file__).resolve().parent
-MAPPING_PATH = BASE_DIR / "class_mapping.json"
+base_dir = Path(__file__).resolve().parent
+MAPPING_PATH = base_dir / "class_mapping.json"
 
 with open(MAPPING_PATH, "r", encoding="utf-8") as f:
     CLASS_NAME_MAP = json.load(f)
 
-DATA_ROOT = BASE_DIR / "cropped_belgiumts_classid" / "train"
-MODEL_PATH = BASE_DIR / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+data_root = base_dir / "cropped_belgiumts_classid" / "train"
+model_path = base_dir / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def load_class_names():
-    dataset = datasets.ImageFolder(root=str(DATA_ROOT))
+    dataset = datasets.ImageFolder(root=str(data_root))
     return dataset.classes
 
 
@@ -38,14 +38,14 @@ transform = transforms.Compose([
 @st.cache_resource
 def load_model():
     model = ResNet18Classifier(num_classes=len(CLASS_NAMES), pretrained=False)
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
-    model.to(DEVICE)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.to(device)
     model.eval()
     return model
 
 
 def predict_image(model, image: Image.Image):
-    x = transform(image).unsqueeze(0).to(DEVICE)
+    x = transform(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
         logits = model(x)
