@@ -5,7 +5,7 @@ from collections import defaultdict
 import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
-BASE_DIR = Path(__file__).resolve().parent
+base_dir = Path(__file__).resolve().parent
 
 def get_transforms(img_size: int = 64, augmented: bool = False):
     if augmented:
@@ -56,11 +56,8 @@ class FilteredImageFolder(torch.utils.data.Dataset):
 
 
 def extract_group_id(path: str) -> str:
-    """
-    文件名格式:
-    00_image.000945_12_34_56_78.jpg
-    group id -> 00_image.000945
-    """
+    # 00_image.000945_12_34_56_78.jpg
+    # group id -> 00_image.000945
     filename = Path(path).stem
     parts = filename.split("_")
 

@@ -15,14 +15,11 @@ from sklearn.metrics import (
 from dataset import get_dataloaders
 from model import SimpleCNN, ResNet18Classifier
 
-
-# =========================
 # Config
-# =========================
 base_dir = Path(__file__).resolve().parent
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model_name = "ResNet18"      # "SimpleCNN" or "ResNet18"
+model_name = "ResNet18"      # "SimpleCNN" / "ResNet18"
 augmentation = True     # True / False
 
 num_epoch = 15
@@ -35,8 +32,6 @@ pretrained = True
 data_root = base_dir / "cropped_belgiumts_classid"
 output_dir = base_dir / f"outputs_{model_name}_aug{augmentation}"
 output_dir.mkdir(exist_ok=True)
-# =========================
-
 
 def build_model(model_name: str, num_classes: int):
     if model_name == "SimpleCNN":
@@ -126,10 +121,10 @@ def train():
     num_classes = len(class_names)
 
     print("=" * 50)
-    print(f"Model Name       : {model_name}")
-    print(f"Use Augmentation : {augmentation}")
-    print(f"Num Classes      : {num_classes}")
-    print(f"Output Dir       : {output_dir}")
+    print(f"Model Name: {model_name}")
+    print(f"Use Augmentation: {augmentation}")
+    print(f"Num Classes: {num_classes}")
+    print(f"Output Dir: {output_dir}")
     print("=" * 50)
 
     model = build_model(model_name, num_classes=num_classes).to(device)
@@ -197,10 +192,10 @@ def train():
 
     test_loss, test_acc, test_f1, y_true, y_pred = evaluate_model(model, test_loader, criterion)
 
-    print("\n===== FINAL TEST RESULTS =====")
-    print(f"Test Loss     : {test_loss:.4f}")
-    print(f"Test Accuracy : {test_acc:.4f}")
-    print(f"Test Macro F1 : {test_f1:.4f}")
+    print("\n FINAL TEST RESULTS:")
+    print(f"Test Loss: {test_loss:.4f}")
+    print(f"Test Accuracy: {test_acc:.4f}")
+    print(f"Test Macro F1: {test_f1:.4f}")
 
     report = classification_report(
         y_true,
@@ -222,12 +217,12 @@ def train():
     )
 
     with open(output_dir / "final_test_results.txt", "w", encoding="utf-8") as f:
-        f.write("===== FINAL TEST RESULTS =====\n")
-        f.write(f"Model Name    : {model_name}\n")
-        f.write(f"Augmentation  : {augmentation}\n")
-        f.write(f"Test Loss     : {test_loss:.4f}\n")
-        f.write(f"Test Accuracy : {test_acc:.4f}\n")
-        f.write(f"Test Macro F1 : {test_f1:.4f}\n")
+        f.write("FINAL TEST RESULTS: \n")
+        f.write(f"Model Name: {model_name}\n")
+        f.write(f"Augmentation: {augmentation}\n")
+        f.write(f"Test Loss: {test_loss:.4f}\n")
+        f.write(f"Test Accuracy: {test_acc:.4f}\n")
+        f.write(f"Test Macro F1: {test_f1:.4f}\n")
 
     with open(output_dir / "run_config.txt", "w", encoding="utf-8") as f:
         f.write(f"MODEL_NAME={model_name}\n")

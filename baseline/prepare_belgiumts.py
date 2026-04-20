@@ -229,12 +229,12 @@ def process_split(rows, split_name: str, allowed_classes=None):
             print(f"[{split_name}] processed {idx}/{len(rows)}")
 
     print(f"\n===== {split_name.upper()} SUMMARY =====")
-    print(f"Saved crops     : {saved_count}")
-    print(f"Skipped camera  : {skipped_camera}")
-    print(f"Skipped label   : {skipped_label}")
-    print(f"Skipped bbox    : {skipped_bbox}")
-    print(f"Missing images  : {skipped_missing}")
-    print(f"Skipped rare    : {skipped_rare}")
+    print(f"Saved crops: {saved_count}")
+    print(f"Skipped camera: {skipped_camera}")
+    print(f"Skipped label: {skipped_label}")
+    print(f"Skipped bbox: {skipped_bbox}")
+    print(f"Missing images: {skipped_missing}")
+    print(f"Skipped rare: {skipped_rare}")
     print("Class counts:")
     for cls, cnt in sorted(class_counter.items(), key=lambda x: x[0]):
         print(f"  {cls:<18} {cnt}")
@@ -257,13 +257,13 @@ def main():
     test_rows = parse_annotation_file(test_file)
 
     print(f"Train annotations loaded: {len(train_rows)}")
-    print(f"Test annotations loaded : {len(test_rows)}\n")
+    print(f"Test annotations loaded: {len(test_rows)}\n")
 
     if allowed_cameras is None:
         train_cams = {r['camera'] for r in train_rows}
         test_cams = {r['camera'] for r in test_rows}
         print(f"Detected train cameras: {sorted(train_cams)}")
-        print(f"Detected test cameras : {sorted(test_cams)}\n")
+        print(f"Detected test cameras: {sorted(test_cams)}\n")
 
     allowed_classes = build_allowed_class_set(train_rows, test_rows)
     if allowed_classes is not None:

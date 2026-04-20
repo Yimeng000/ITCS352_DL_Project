@@ -96,9 +96,9 @@ if uploaded_file is not None:
         class_id, display_name, confidence, probs = predict_image(model, cropped)
 
         st.subheader("Prediction")
-        st.write(f"Predicted: **{display_name}**")
-        st.write(f"Internal class id: `{class_id}`")
-        st.write(f"Confidence: **{confidence:.4f}**")
+        st.write(f"Predicted: {display_name}")
+        st.write(f"Internal class id: {class_id}")
+        st.write(f"Confidence: {confidence:.4f}")
 
         topk = torch.topk(probs, 3)
 
