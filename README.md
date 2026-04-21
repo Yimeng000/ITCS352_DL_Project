@@ -65,18 +65,13 @@ python prepare_belgiumts.py
 
 ### Step 2: Train model
 Example (Model 4 - best model):
-
-python train.py --model resnet18 --aug --epochs 20
-
+(model: resnet18 + aug + epochs 20)
+```bash
+python train.py 
+```
 ---
 
-### Step 3: Evaluate model
-
-python evaluate.py --model_path path/to/model.pth
-
----
-
-### Step 4: Run demo
+### Step 3: Run demo
 ```bash
 streamlit run app.py
 ```
