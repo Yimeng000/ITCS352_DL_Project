@@ -97,12 +97,11 @@ The project follows an **iterative model improvement strategy** rather than isol
 
 ### Model 4: ResNet18 + Data Augmentation
 - Further improvements through augmentation  
-
 ---
 
 ## Evaluation Metrics
-- **Accuracy**
-- **Macro F1-score** (important for class imbalance)
+- Accuracy
+- Macro F1-score (important for class imbalance)
 - Confusion Matrix
 - Classification Report
 
@@ -129,7 +128,7 @@ The trained model is deployed using a Streamlit web app.
 ### Run locally:
 ```bash
 streamlit run app.py
-
+```
 --
 
 ## Reproducing reported results
@@ -145,3 +144,16 @@ These results can be found under:
 baseline/outputs_*
 
 This allows reproduction without retraining.
+
+---
+## Docker (Optional)
+
+The project was run in a containerized environment.
+To build the Docker image:
+```bash
+docker build -t traffic-sign .
+```
+To run:
+```bash
+docker run -it traffic-sign
+```
