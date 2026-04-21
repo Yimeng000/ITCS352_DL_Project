@@ -77,7 +77,7 @@ streamlit run app.py
 ```
 ---
 
-## Model Development (All model training and results are in the Baseline)
+## Model Development (All model training and results are in the Baseline/)
 
 The project follows an **iterative model improvement strategy** rather than isolated experiments.
 
