@@ -4,27 +4,20 @@ from pathlib import Path
 from collections import Counter
 from PIL import Image
 
-# ========= 配置区 =========
 project_root  = Path(__file__).resolve().parent.parent
 data_root = project_root / "data"   
 annotation_dir = data_root  / "BelgiumTSD_annotations"  
 output_root = Path(__file__).resolve().parent / "cropped_belgiumts_classid"  
 
-# 训练和测试标注文件
 train_file = annotation_dir / "BTSD_training_GTclear.txt"
 test_file = annotation_dir / "BTSD_testing_GTclear.txt"
 
-# None = 自动使用所有 camera
 allowed_cameras = None
 
 min_width = 20
 min_height = 20
 
-
-# 设为 0 表示不过滤
 min_samples_per_class = 10
-# =========================
-
 
 def safe_mkdir(path: Path):
     path.mkdir(parents=True, exist_ok=True)
@@ -77,7 +70,6 @@ def parse_annotation_file(txt_path: Path):
 
 
 def get_label_name(class_id: int, superclass_id: int = None):
-    # 过滤 undefined 类
     if class_id == -1:
         return None
     return f"class_{class_id}"

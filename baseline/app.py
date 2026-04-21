@@ -19,8 +19,8 @@ with open(MAPPING_PATH, "r", encoding="utf-8") as f:
 data_root = base_dir / "cropped_belgiumts_classid" / "train"
 # model_path = base_dir / "outputs_SimpleCNN_augFalse" / "best_SimpleCNN.pth"
 # model_path = base_dir / "outputs_SimpleCNN_augTrue" / "best_SimpleCNN.pth"
-model_path = base_dir / "outputs_ResNet18_augFalse" / "best_ResNet18.pth"
-# model_path = base_dir / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
+# model_path = base_dir / "outputs_ResNet18_augFalse" / "best_ResNet18.pth"
+model_path = base_dir / "outputs_ResNet18_augTrue" / "best_ResNet18.pth"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -40,8 +40,8 @@ transform = transforms.Compose([
 
 @st.cache_resource
 def load_model():
-    # model = ResNet18Classifier(num_classes=len(class_names), pretrained=False)  
-    model = SimpleCNN(num_classes=len(class_names))
+    model = ResNet18Classifier(num_classes=len(class_names), pretrained=False)  
+    # model = SimpleCNN(num_classes=len(class_names))
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()

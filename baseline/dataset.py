@@ -126,7 +126,6 @@ def get_dataloaders(
     raw_train_dataset = datasets.ImageFolder(root=str(train_dir), allow_empty=True)
     raw_test_dataset = datasets.ImageFolder(root=str(test_dir), allow_empty=True)
 
-    # 只保留 train/test 共同拥有的类别，避免 target_names 不一致
     train_classes = set(raw_train_dataset.classes)
     test_classes = set(raw_test_dataset.classes)
     common_classes = sorted(list(train_classes & test_classes))
