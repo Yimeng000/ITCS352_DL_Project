@@ -59,6 +59,7 @@ data/
 Then run:
 ```bash
 python prepare_belgiumts.py
+```
 
 ---
 
