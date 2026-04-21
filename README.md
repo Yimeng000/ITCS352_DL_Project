@@ -129,7 +129,7 @@ The trained model is deployed using a Streamlit web app.
 ```bash
 streamlit run app.py
 ```
---
+---
 
 ## Reproducing reported results
 The repository includes pre-trained models and outputs:
