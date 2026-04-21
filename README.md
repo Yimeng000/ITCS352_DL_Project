@@ -1,88 +1,85 @@
-🚦 Traffic Sign Classification – Baseline Model  
-📌 Project Overview  
+# Traffic Sign Recognition System (Deep Learning Project)
 
-This project focuses on traffic sign classification using deep learning. The goal is to build a baseline model that can recognize traffic signs from images and serve as a foundation for further improvements. 
+## Overview
+This project focuses on traffic sign classification using deep learning techniques. The goal is to build a robust and accurate system capable of recognizing traffic signs under real-world conditions such as variations in lighting, orientation, and noise.
 
-Traffic sign recognition is an important task in real-world applications such as:  
+The system is developed as part of a Computer Vision course project and demonstrates an end-to-end pipeline including data preprocessing, model training, evaluation, and deployment using a web interface.
 
-Autonomous driving  
-Driver assistance systems  
-Smart transportation  
+---
 
-This baseline model provides a starting point for improving robustness under real-world conditions, such as:  
+## Objectives
+- Develop a deep learning model for traffic sign classification
+- Improve model performance through iterative experiments
+- Analyze model behavior using metrics such as accuracy and macro F1-score
+- Deploy the trained model using an interactive web application
 
-Lighting variation  
-Different orientations  
-Noise and occlusion  
-📂 Project Structure  
-<img width="300" height="500" alt="image" src="https://github.com/user-attachments/assets/006827ec-a9ca-49a1-a81a-dd6e33985d07" />  
+---
 
+## Dataset
+The project uses a BelgiumTS traffic sign dataset  
 
-⚠️ Note: Dataset files are not included in this repository.  
+### Key characteristics:
+- Multiple traffic sign categories (fine-grained classification)
+- Real-world variations (lighting, blur, angle)
+- Class imbalance across categories
 
-📊 Dataset  
+### Preprocessing steps:
+- Cropping traffic sign regions
+- Image resizing
+- Normalization
+- Data augmentation (rotation, flipping, etc.)
 
-This project uses the Belgium Traffic Sign Dataset (BelgiumTSC).  
+---
 
-Contains images of traffic signs from real-world road scenes  
-Multiple classes (traffic sign categories)  
-Variations in lighting, scale, and viewpoint  
-⚠️ Important  
+## Model Development
 
-The dataset is not uploaded to GitHub due to size limitations.  
+The project follows an **iterative model improvement strategy** rather than isolated experiments.
 
-You can download it from:  
-👉 https://btsd.ethz.ch/shareddata/  
+### Model 1: SimpleCNN (Baseline)
+- Basic CNN architecture
+- Fast training and interpretable results
+- Provides a reference for further improvements
 
-After downloading, place it into:  
+### Model 2: CNN + Data Augmentation
+- Introduces augmentation to improve generalization
+- Helps reduce overfitting but may introduce noise
 
-data/  
-⚙️ Baseline Model  
+### Model 3: ResNet18 (Transfer Learning)
+- Pretrained deep architecture
+- Better feature extraction
+- Improved performance on complex classes
 
-The baseline model is implemented in:  
+### Model 4: ResNet18 + Data Augmentation
+- Further improvements through augmentation
 
-baseline/model.py  
+---
 
-Typical structure:  
+## Evaluation Metrics
+- **Accuracy**
+- **Macro F1-score** (important for class imbalance)
+- Confusion Matrix
+- Classification Report
 
-Convolutional layers (CNN)  
-Activation functions (ReLU)  
-Pooling layers  
-Fully connected layers for classification  
+The results show that while overall accuracy is high, some visually similar traffic signs remain challenging, especially triangular warning signs.
 
-This model is designed to:  
+---
 
-Be simple and easy to train  
-Provide a reference for performance comparison  
-🏋️ Training  
+## Key Challenges
+- Class imbalance
+- Similar visual patterns between classes
+- Overfitting in deeper models
+- Sensitivity to preprocessing and augmentation
 
-Training script:  
+---
 
-baseline/train.py  
-Run training:  
-cd baseline  
-python train.py  
-Training pipeline:  
-Load dataset (dataset.py)  
-Preprocess images (resize, normalize)  
-Train CNN model  
-Save outputs (loss, accuracy, model weights)  
-📈 Outputs  
- 
-Training results are saved in:  
+## Web Application (Streamlit)
+The trained model is deployed using a Streamlit web app.
 
-outputs_belgiumts_classification/  
+### Features:
+- Upload traffic sign images
+- Real-time prediction
+- User-friendly interface
 
-Includes:  
-
-Model weights (.pth)  
-Training logs  
-Accuracy / loss results  
-📌 Baseline Performance  
-
-Example results:  
-
-Test Accuracy: ~XX%  
-Test Loss: ~XX  
-
-These results serve as a baseline and will be improved in later models.  
+### Run locally:
+```bash
+streamlit run app.py
