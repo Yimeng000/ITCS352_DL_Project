@@ -5,7 +5,7 @@ This project focuses on traffic sign classification using deep learning techniqu
 
 The system is developed as part of a Computer Vision course project and demonstrates an end-to-end pipeline including data preprocessing, model training, evaluation, and deployment using a web interface.
 
---
+---
 
 ## Objectives
 - Develop a deep learning model for traffic sign classification
