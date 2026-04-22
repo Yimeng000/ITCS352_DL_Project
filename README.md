@@ -35,7 +35,10 @@ pip install -r requirements.txt
 ## Dataset
 The project uses a BelgiumTS traffic sign dataset  
 Please download dataset through this link:   
-https://drive.google.com/drive/folders/1fiLG5H9UgNHlFNEbw237dC9SzOEQqFKd?usp=drive_link
+https://drive.google.com/drive/folders/1fiLG5H9UgNHlFNEbw237dC9SzOEQqFKd?usp=drive_link  
+
+Or clik the link below to download the .zip file containing 00-07 and annotation from the offical website:
+https://btsd.ethz.ch/shareddata/
 
 ### Key characteristics:
 - Multiple traffic sign categories (fine-grained classification)
